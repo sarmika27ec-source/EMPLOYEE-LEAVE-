@@ -1,0 +1,17 @@
+package com.example.employee_leave_management.repository;
+
+import com.example.employee_leave_management.domain.LeaveBalance;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long> {
+
+    List<LeaveBalance> findByEmployeeId(Long employeeId);
+
+    Optional<LeaveBalance> findByEmployeeIdAndLeaveTypeId(
+            Long employeeId,
+            Long leaveTypeId
+    );
+}

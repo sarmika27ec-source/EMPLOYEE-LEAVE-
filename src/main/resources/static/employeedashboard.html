@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Dashboard</title>
+</head>
+<body>
+
+    <h1>Employee Dashboard</h1>
+
+    <h3 id="welcome"></h3>
+
+    <hr>
+
+    <h2>Leave Balance</h2>
+
+    <table border="1" id="balanceTable">
+
+        <tr>
+            <th>Leave Type ID</th>
+            <th>Available Days</th>
+        </tr>
+
+    </table>
+
+    <br>
+
+    <h2>Apply for Leave</h2>
+
+    <form id="leaveForm">
+
+        <label>Leave Type:</label>
+
+        <select id="leaveTypeId" required>
+            <option value="">Select Leave Type</option>
+        </select>
+
+        <br><br>
+
+        <label>Start Date:</label>
+        <input type="date" id="startDate" required>
+
+        <br><br>
+
+        <label>End Date:</label>
+        <input type="date" id="endDate" required>
+
+        <br><br>
+
+        <label>Reason:</label>
+        <br>
+
+        <textarea id="reason" rows="4" cols="40"
+                  required></textarea>
+
+        <br><br>
+
+        <button type="submit">Apply Leave</button>
+
+    </form>
+
+    <p id="leaveMessage"></p>
+
+    <hr>
+
+    <h2>Leave History</h2>
+
+    <table border="1" id="requestTable">
+
+        <tr>
+            <th>Leave Type ID</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Manager Comment</th>
+        </tr>
+
+    </table>
+
+    <br>
+
+    <button onclick="logout()">Logout</button>
+
+    <script>
+
+        const employeeId =
+            localStorage.getItem("employeeId");
+
+        const employeeName =
+            localStorage.getItem("employeeName");
+
+        if (!employeeId) {
+            window.location.href = "login.html";
+        }
+
+        document.getElementById("welcome").innerText =
+            "Welcome, " + employeeName;
+
+        loadBalance();
+        loadLeaveTypes();
+        loadRequests();
+
+
+        function loadBalance() {
+
+            fetch("/api/leave/balance/" + employeeId)
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    const table =
+                        document.getElementById("balanceTable");
+
+                    data.forEach(balance => {
+
+                        const row =
+                            table.insertRow();
+
+                        row.insertCell(0).innerText =
+                            balance.leaveTypeId;
+
+                        row.insertCell(1).innerText =
+                            balance.availableDays;
+
+                    });
+
+                });
+        }
+
+
+        function loadLeaveTypes() {
+
+            fetch("/api/leave/types")
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    const select =
+                        document.getElementById("leaveTypeId");
+
+                    data.forEach(type => {
+
+                        const option =
+                            document.createElement("option");
+
+                        option.value = type.id;
+
+                        option.text =
+                            type.name;
+
+                        select.appendChild(option);
+
+                    });
+
+                });
+        }
+
+
+        function loadRequests() {
+
+            fetch("/api/leave/requests/" + employeeId)
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    const table =
+                        document.getElementById("requestTable");
+
+                    data.forEach(request => {
+
+                        const row =
+                            table.insertRow();
+
+                        row.insertCell(0).innerText =
+                            request.leaveTypeId;
+
+                        row.insertCell(1).innerText =
+                            request.startDate;
+
+                        row.insertCell(2).innerText =
+                            request.endDate;
+
+                        row.insertCell(3).innerText =
+                            request.reason;
+
+                        row.insertCell(4).innerText =
+                            request.status;
+
+                        row.insertCell(5).innerText =
+                            request.managerComment;
+
+                    });
+
+                });
+        }
+
+
+        document.getElementById("leaveForm")
+            .addEventListener("submit", function(event) {
+
+                event.preventDefault();
+
+                const request = {
+
+                    employeeId: Number(employeeId),
+
+                    leaveTypeId:
+                        Number(
+                            document.getElementById(
+                                "leaveTypeId"
+                            ).value
+                        ),
+
+                    startDate:
+                        document.getElementById(
+                            "startDate"
+                        ).value,
+
+                    endDate:
+                        document.getElementById(
+                            "endDate"
+                        ).value,
+
+                    reason:
+                        document.getElementById(
+                            "reason"
+                        ).value
+
+                };
+
+                fetch("/api/leave/apply", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(request)
+
+                })
+                .then(response => response.text())
+
+                .then(message => {
+
+                    document.getElementById(
+                        "leaveMessage"
+                    ).innerText = message;
+
+                    loadBalance();
+                    loadRequests();
+
+                });
+
+            });
+
+
+        function logout() {
+
+            localStorage.clear();
+
+            window.location.href =
+                "login.html";
+        }
+
+    </script>
+
+</body>
+</html>

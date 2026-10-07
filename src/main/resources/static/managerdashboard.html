@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manager Dashboard</title>
+</head>
+<body>
+
+    <h1>Manager Dashboard</h1>
+
+    <h2>Pending Leave Requests</h2>
+
+    <table border="1" id="requestTable">
+
+        <tr>
+            <th>ID</th>
+            <th>Employee ID</th>
+            <th>Leave Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Reason</th>
+            <th>Action</th>
+        </tr>
+
+    </table>
+
+    <p id="message"></p>
+
+    <br>
+
+    <button onclick="logout()">Logout</button>
+
+    <script>
+
+        loadRequests();
+
+
+        function loadRequests() {
+
+            fetch("/api/manager/pending")
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    const table =
+                        document.getElementById(
+                            "requestTable"
+                        );
+
+                    data.forEach(request => {
+
+                        const row =
+                            table.insertRow();
+
+                        row.insertCell(0).innerText =
+                            request.id;
+
+                        row.insertCell(1).innerText =
+                            request.employeeId;
+
+                        row.insertCell(2).innerText =
+                            request.leaveTypeId;
+
+                        row.insertCell(3).innerText =
+                            request.startDate;
+
+                        row.insertCell(4).innerText =
+                            request.endDate;
+
+                        row.insertCell(5).innerText =
+                            request.reason;
+
+                        const actionCell =
+                            row.insertCell(6);
+
+                        const approveButton =
+                            document.createElement("button");
+
+                        approveButton.innerText =
+                            "Approve";
+
+                        approveButton.onclick =
+                            function() {
+
+                                approveLeave(request.id);
+                            };
+
+
+                        const rejectButton =
+                            document.createElement("button");
+
+                        rejectButton.innerText =
+                            "Reject";
+
+                        rejectButton.onclick =
+                            function() {
+
+                                rejectLeave(request.id);
+                            };
+
+
+                        actionCell.appendChild(
+                            approveButton
+                        );
+
+                        actionCell.appendChild(
+                            document.createTextNode(" ")
+                        );
+
+                        actionCell.appendChild(
+                            rejectButton
+                        );
+
+                    });
+
+                });
+        }
+
+
+        function approveLeave(id) {
+
+            const comment =
+                prompt("Enter manager comment:");
+
+            fetch(
+                "/api/manager/approve/" +
+                id +
+                "?comment=" +
+                encodeURIComponent(
+                    comment || ""
+                ),
+                {
+                    method: "PUT"
+                }
+            )
+            .then(response => response.text())
+
+            .then(message => {
+
+                document.getElementById(
+                    "message"
+                ).innerText = message;
+
+                location.reload();
+
+            });
+        }
+
+
+        function rejectLeave(id) {
+
+            const comment =
+                prompt("Enter rejection reason:");
+
+            fetch(
+                "/api/manager/reject/" +
+                id +
+                "?comment=" +
+                encodeURIComponent(
+                    comment || ""
+                ),
+                {
+                    method: "PUT"
+                }
+            )
+            .then(response => response.text())
+
+            .then(message => {
+
+                document.getElementById(
+                    "message"
+                ).innerText = message;
+
+                location.reload();
+
+            });
+        }
+
+
+        function logout() {
+
+            localStorage.clear();
+
+            window.location.href =
+                "login.html";
+        }
+
+    </script>
+
+</body>
+</html>
