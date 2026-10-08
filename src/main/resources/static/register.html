@@ -1,109 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Registration</title>
 </head>
+
 <body>
 
-    <h2>Employee Registration</h2>
+    <h1>Employee Registration</h1>
 
-    <form id="registerForm">
+    <form action="/register" method="post">
 
-        <label>Employee ID:</label>
-        <input type="text" id="employeeId" required>
+        <label for="employeename">Employee Name:</label>
+        <input type="text" id="employeename" name="employeename" required>
         <br><br>
 
-        <label>Employee Name:</label>
-        <input type="text" id="employeename" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
         <br><br>
 
-        <label>Email:</label>
-        <input type="email" id="email" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
         <br><br>
 
-        <label>Password:</label>
-        <input type="password" id="password" required>
-        <br><br>
-
-        <label>Department:</label>
-        <input type="text" id="department" required>
+        <label for="department">Department:</label>
+        <input type="text" id="department" name="department" required>
         <br><br>
 
         <button type="submit">Register</button>
 
     </form>
 
-    <p id="message"></p>
+    <br>
 
-    <a href="login.html">Already registered? Login</a>
-
-    <script>
-
-        document.getElementById("registerForm")
-            .addEventListener("submit", function(event) {
-
-                event.preventDefault();
-
-                const employee = {
-
-                    employeeId:
-                        document.getElementById("employeeId").value,
-
-                    employeename:
-                        document.getElementById("employeename").value,
-
-                    email:
-                        document.getElementById("email").value,
-
-                    password:
-                        document.getElementById("password").value,
-
-                    department:
-                        document.getElementById("department").value,
-
-                    role: "EMPLOYEE",
-
-                    attendance: 0
-                };
-
-                fetch("/api/register", {
-
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify(employee)
-
-                })
-                .then(response => {
-
-                    if (!response.ok) {
-                        throw new Error("Registration failed");
-                    }
-
-                    return response.json();
-
-                })
-                .then(data => {
-
-                    document.getElementById("message").innerText =
-                        "Registration successful!";
-
-                    document.getElementById("registerForm").reset();
-
-                })
-                .catch(error => {
-
-                    document.getElementById("message").innerText =
-                        "Registration failed!";
-
-                });
-
-            });
-
-    </script>
+    <a href="/login.html">Already registered? Login</a>
 
 </body>
 </html>

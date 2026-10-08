@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Dashboard</title>
 </head>
+
 <body>
 
     <h1>Employee Dashboard</h1>
@@ -49,8 +53,7 @@
         <label>Reason:</label>
         <br>
 
-        <textarea id="reason" rows="4" cols="40"
-                  required></textarea>
+        <textarea id="reason" rows="4" cols="40" required></textarea>
 
         <br><br>
 
@@ -83,34 +86,65 @@
 
     <script>
 
-        const employeeId =
-            localStorage.getItem("employeeId");
+        // Get employee details from the URL
+        const urlParams = new URLSearchParams(window.location.search);
 
-        const employeeName =
-            localStorage.getItem("employeeName");
+        const employeeId = urlParams.get("employeeId");
 
-        if (!employeeId) {
+        const employeeName = urlParams.get("employeeName");
+
+
+        // Check whether employee ID exists
+        if (!employeeId || employeeId === "null") {
+
             window.location.href = "login.html";
+
         }
 
+
+        // Store employee details in localStorage
+        localStorage.setItem("employeeId", employeeId);
+
+        localStorage.setItem("employeeName", employeeName);
+
+
+        // Display welcome message
         document.getElementById("welcome").innerText =
             "Welcome, " + employeeName;
 
+
+        // Load employee information
         loadBalance();
+
         loadLeaveTypes();
+
         loadRequests();
 
 
+        // Load leave balance
         function loadBalance() {
 
             fetch("/api/leave/balance/" + employeeId)
 
-                .then(response => response.json())
+                .then(response => {
+
+                    if (!response.ok) {
+                        throw new Error("Unable to load leave balance");
+                    }
+
+                    return response.json();
+
+                })
 
                 .then(data => {
 
                     const table =
                         document.getElementById("balanceTable");
+
+                    // Remove old rows except header
+                    while (table.rows.length > 1) {
+                        table.deleteRow(1);
+                    }
 
                     data.forEach(balance => {
 
@@ -125,15 +159,31 @@
 
                     });
 
+                })
+
+                .catch(error => {
+
+                    console.error(error);
+
                 });
+
         }
 
 
+        // Load leave types
         function loadLeaveTypes() {
 
             fetch("/api/leave/types")
 
-                .then(response => response.json())
+                .then(response => {
+
+                    if (!response.ok) {
+                        throw new Error("Unable to load leave types");
+                    }
+
+                    return response.json();
+
+                })
 
                 .then(data => {
 
@@ -154,20 +204,41 @@
 
                     });
 
+                })
+
+                .catch(error => {
+
+                    console.error(error);
+
                 });
+
         }
 
 
+        // Load leave history
         function loadRequests() {
 
             fetch("/api/leave/requests/" + employeeId)
 
-                .then(response => response.json())
+                .then(response => {
+
+                    if (!response.ok) {
+                        throw new Error("Unable to load leave requests");
+                    }
+
+                    return response.json();
+
+                })
 
                 .then(data => {
 
                     const table =
                         document.getElementById("requestTable");
+
+                    // Remove old rows except header
+                    while (table.rows.length > 1) {
+                        table.deleteRow(1);
+                    }
 
                     data.forEach(request => {
 
@@ -190,46 +261,55 @@
                             request.status;
 
                         row.insertCell(5).innerText =
-                            request.managerComment;
+                            request.managerComment || "";
 
                     });
 
+                })
+
+                .catch(error => {
+
+                    console.error(error);
+
                 });
+
         }
 
 
+        // Apply for leave
         document.getElementById("leaveForm")
             .addEventListener("submit", function(event) {
 
                 event.preventDefault();
 
+
+                const leaveTypeId =
+                    document.getElementById("leaveTypeId").value;
+
+                const startDate =
+                    document.getElementById("startDate").value;
+
+                const endDate =
+                    document.getElementById("endDate").value;
+
+                const reason =
+                    document.getElementById("reason").value;
+
+
                 const request = {
 
                     employeeId: Number(employeeId),
 
-                    leaveTypeId:
-                        Number(
-                            document.getElementById(
-                                "leaveTypeId"
-                            ).value
-                        ),
+                    leaveTypeId: Number(leaveTypeId),
 
-                    startDate:
-                        document.getElementById(
-                            "startDate"
-                        ).value,
+                    startDate: startDate,
 
-                    endDate:
-                        document.getElementById(
-                            "endDate"
-                        ).value,
+                    endDate: endDate,
 
-                    reason:
-                        document.getElementById(
-                            "reason"
-                        ).value
+                    reason: reason
 
                 };
+
 
                 fetch("/api/leave/apply", {
 
@@ -242,6 +322,7 @@
                     body: JSON.stringify(request)
 
                 })
+
                 .then(response => response.text())
 
                 .then(message => {
@@ -250,23 +331,49 @@
                         "leaveMessage"
                     ).innerText = message;
 
+
+                    // Refresh balance and history
                     loadBalance();
+
                     loadRequests();
+
+
+                    // Clear form after successful application
+                    if (message === "Leave applied successfully") {
+
+                        document.getElementById(
+                            "leaveForm"
+                        ).reset();
+
+                    }
+
+                })
+
+                .catch(error => {
+
+                    document.getElementById(
+                        "leaveMessage"
+                    ).innerText =
+                        "Error applying for leave.";
+
+                    console.error(error);
 
                 });
 
             });
 
 
+        // Logout
         function logout() {
 
             localStorage.clear();
 
-            window.location.href =
-                "login.html";
+            window.location.href = "login.html";
+
         }
 
     </script>
 
 </body>
+
 </html>

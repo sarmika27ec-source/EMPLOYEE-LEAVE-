@@ -3,73 +3,37 @@ package com.example.employee_leave_management.controller;
 import com.example.employee_leave_management.domain.Employee;
 import com.example.employee_leave_management.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@RestController
+@Controller
 public class EmployeeController {
 
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @PostMapping("/api/register")
-    public Employee register(@RequestBody Employee employee) {
-
-        employee.setRole("EMPLOYEE");
-
-        if (employee.getAttendance() == null) {
-            employee.setAttendance(0);
-        }
-
-        employee.setActive(true);
-
-        return employeeRepository.save(employee);
+    @GetMapping("/employees")
+    public String employees(Model model) {
+        model.addAttribute("employees", employeeRepository.findAll());
+        return "employees";
     }
 
-    @PostMapping("/api/login")
-    public Employee login(@RequestBody Employee loginEmployee) {
-
-        return employeeRepository
-                .findByEmailAndPassword(
-                        loginEmployee.getEmail(),
-                        loginEmployee.getPassword()
-                )
-                .orElse(null);
+    @GetMapping("/employees/add")
+    public String showAddEmployeeForm(Model model) {
+        model.addAttribute("employee", new Employee());
+        return "add-employee";
     }
 
-    @GetMapping("/api/employees")
-    public List<Employee> getEmployees() {
-        return employeeRepository.findAll();
+    @PostMapping("/employees/save")
+    public String saveEmployee(@ModelAttribute Employee employee) {
+        employeeRepository.save(employee);
+        return "redirect:/employees";
     }
 
-    @GetMapping("/api/employee/{id}")
-    public Employee getEmployee(@PathVariable Long id) {
-        return employeeRepository.findById(id).orElse(null);
-    }
-
-    @PutMapping("/api/employee/{id}")
-    public Employee updateEmployee(
-            @PathVariable Long id,
-            @RequestBody Employee updatedEmployee) {
-
-        Employee employee =
-                employeeRepository.findById(id).orElse(null);
-
-        if (employee == null) {
-            return null;
-        }
-
-        employee.setEmployeename(updatedEmployee.getEmployeename());
-        employee.setEmail(updatedEmployee.getEmail());
-        employee.setDepartment(updatedEmployee.getDepartment());
-
-        if (updatedEmployee.getPassword() != null &&
-                !updatedEmployee.getPassword().isEmpty()) {
-
-            employee.setPassword(updatedEmployee.getPassword());
-        }
-
-        return employeeRepository.save(employee);
+    @GetMapping("/employees/delete/{id}")
+    public String deleteEmployee(@PathVariable Long id) {
+        employeeRepository.deleteById(id);
+        return "redirect:/employees";
     }
 }
