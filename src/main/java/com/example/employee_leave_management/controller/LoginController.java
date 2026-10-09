@@ -2,6 +2,7 @@ package com.example.employee_leave_management.controller;
 
 import com.example.employee_leave_management.domain.Employee;
 import com.example.employee_leave_management.repository.EmployeeRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -12,15 +13,11 @@ public class LoginController {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @GetMapping("/login")
-    public String showLoginPage() {
-        return "forward:/login.html";
-    }
-
     @PostMapping("/login")
     public String login(
             @RequestParam String employeename,
-            @RequestParam String password) {
+            @RequestParam String password,
+            HttpSession session) {
 
         Employee employee =
                 employeeRepository.findByEmployeenameAndPassword(
@@ -28,28 +25,23 @@ public class LoginController {
                         password
                 );
 
-        if (employee != null) {
+        if (employee == null) {
+            return "redirect:/login.html?error=true";
+        }
 
-            if ("ADMIN".equalsIgnoreCase(employee.getRole())) {
-                return "redirect:/admindashboard.html?employeeId="
-                        + employee.getId()
-                        + "&employeeName="
-                        + employee.getEmployeename();
-            }
+        session.setAttribute("employee", employee);
 
-            if ("MANAGER".equalsIgnoreCase(employee.getRole())) {
-                return "redirect:/managerdashboard.html?employeeId="
-                        + employee.getId()
-                        + "&employeeName="
-                        + employee.getEmployeename();
-            }
+        if ("MANAGER".equalsIgnoreCase(employee.getRole())) {
+            return "redirect:/managerdashboard.html";
+        }
 
+        if ("EMPLOYEE".equalsIgnoreCase(employee.getRole())) {
             return "redirect:/employeedashboard.html?employeeId="
                     + employee.getId()
                     + "&employeeName="
                     + employee.getEmployeename();
         }
 
-        return "redirect:/login.html?error=true";
+        return "redirect:/login.html?error=role";
     }
 }
